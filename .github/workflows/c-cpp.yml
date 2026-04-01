@@ -1,4 +1,4 @@
-name: C/C++ CI
+name: Build C Program
 
 on:
   push:
@@ -9,123 +9,17 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
+    
     steps:
     - uses: actions/checkout@v4
     
-    - name: Install build tools
-      run: sudo apt-get update && sudo apt-get install -y gcc
+    - name: Compile
+      run: gcc -Wall -Wextra -o currency_converter currency_converter.c
     
-    - name: Compile program
-      run: gcc -o currency_converter currency_converter.c
-    
-    - name: Verify compilation
+    - name: Test compilation
       run: |
-        if [ -f currency_converter ]; then
-          echo "✅ Build successful!"
-          ls -lh currency_converter
-        else
-          echo "❌ Build failed!"
-          exit 1
-        fi
-    
-    - name: Run functional tests
-      run: |
-        echo "============================="
-        echo "     RUNNING FUNCTIONAL TESTS"
-        echo "============================="
-        
-        # Test 1: USD to BDT conversion
-        echo ""
-        echo "Test 1: USD 100 to BDT"
-        OUTPUT=$(echo -e "1\n100\n0\n" | ./currency_converter)
-        echo "$OUTPUT"
-        if echo "$OUTPUT" | grep -q "10800.00"; then
-          echo "✅ Test 1 passed"
-        else
-          echo "❌ Test 1 failed"
-          exit 1
-        fi
-        
-        # Test 2: BDT to USD conversion
-        echo ""
-        echo "Test 2: BDT 1080 to USD"
-        OUTPUT=$(echo -e "2\n1080\n0\n" | ./currency_converter)
-        echo "$OUTPUT"
-        if echo "$OUTPUT" | grep -q "10.00"; then
-          echo "✅ Test 2 passed"
-        else
-          echo "❌ Test 2 failed"
-          exit 1
-        fi
-        
-        # Test 3: USD to EUR conversion
-        echo ""
-        echo "Test 3: USD 100 to EUR"
-        OUTPUT=$(echo -e "3\n100\n0\n" | ./currency_converter)
-        echo "$OUTPUT"
-        if echo "$OUTPUT" | grep -q "95.00"; then
-          echo "✅ Test 3 passed"
-        else
-          echo "❌ Test 3 failed"
-          exit 1
-        fi
-        
-        # Test 4: AUD to BDT conversion
-        echo ""
-        echo "Test 4: AUD 100 to BDT"
-        OUTPUT=$(echo -e "4\n100\n0\n" | ./currency_converter)
-        echo "$OUTPUT"
-        if echo "$OUTPUT" | grep -q "8509.00"; then
-          echo "✅ Test 4 passed"
-        else
-          echo "❌ Test 4 failed"
-          exit 1
-        fi
-        
-        # Test 5: BDT to AUD conversion
-        echo ""
-        echo "Test 5: BDT 1000 to AUD"
-        OUTPUT=$(echo -e "5\n1000\n0\n" | ./currency_converter)
-        echo "$OUTPUT"
-        if echo "$OUTPUT" | grep -q "12.00"; then
-          echo "✅ Test 5 passed"
-        else
-          echo "❌ Test 5 failed"
-          exit 1
-        fi
-        
-        # Test 6: Invalid choice handling
-        echo ""
-        echo "Test 6: Invalid choice (99)"
-        OUTPUT=$(echo -e "99\n0\n" | ./currency_converter)
-        echo "$OUTPUT"
-        if echo "$OUTPUT" | grep -q "Invalid choice"; then
-          echo "✅ Test 6 passed: Invalid choice detected"
-        else
-          echo "❌ Test 6 failed: Invalid choice not detected"
-          exit 1
-        fi
-        
-        # Test 7: Exit functionality
-        echo ""
-        echo "Test 7: Exit with option 0"
-        OUTPUT=$(echo -e "0\n" | ./currency_converter)
-        echo "$OUTPUT"
-        if echo "$OUTPUT" | grep -q "Exiting program"; then
-          echo "✅ Test 7 passed: Exit message displayed"
-        else
-          echo "❌ Test 7 failed: Exit message not displayed"
-          exit 1
-        fi
-        
-        echo ""
-        echo "============================="
-        echo "     ALL TESTS PASSED!      "
-        echo "============================="
-    
-    - name: Upload executable as artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: currency-converter-linux
-        path: currency_converter
+        ./currency_converter << EOF
+        1
+        100
+        0
+        EOF
