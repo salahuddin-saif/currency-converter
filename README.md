@@ -30,3 +30,20 @@ This Currency Converter is a console-based application that provides a user-frie
 1. **Run the program**
    ```bash
    ./currency_converter
+
+## Example Session
+ ```bash
+   =============================
+       CURRENCY CONVERTER      
+=============================
+
+Choose Conversion:
+1. USD to BDT
+2. BDT to USD
+3. USD to EUR
+4. AUD to BDT
+5. BDT to AUD
+0. Exit
+Enter your choice: 1
+Enter the amount: 100
+100.00 USD = 10800.00 BDT 
