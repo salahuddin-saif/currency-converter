@@ -14,35 +14,106 @@ jobs:
     - uses: actions/checkout@v4
     
     - name: Install build tools
-      run: sudo apt-get update && sudo apt-get install -y gcc make
+      run: sudo apt-get update && sudo apt-get install -y gcc
     
     - name: Compile program
-      run: gcc -o currency_converter currency_converter.c -lm
+      run: gcc -o currency_converter currency_converter.c
     
     - name: Run tests
       run: |
-        echo "Running basic tests..."
-        # Test if executable exists
-        if [ -f currency_converter ]; then
-          echo "✓ Executable created successfully"
+        echo "============================="
+        echo "     RUNNING TESTS"
+        echo "============================="
+        
+        # Test 1: USD to BDT conversion
+        echo ""
+        echo "Test 1: USD 100 to BDT"
+        echo -e "1\n100\n0\n" | ./currency_converter | tee test_output.txt
+        if grep -q "10800.00" test_output.txt; then
+          echo "✅ Test 1 passed: USD to BDT conversion correct"
         else
-          echo "✗ Executable not found"
+          echo "❌ Test 1 failed: USD to BDT conversion incorrect"
           exit 1
         fi
         
-        # Test with automated input
-        echo "Testing USD to BDT conversion..."
-        echo -e "1\n100\n0\n" | ./currency_converter | grep "10800.00" && echo "✓ Test passed" || echo "✗ Test failed"
+        # Test 2: BDT to USD conversion
+        echo ""
+        echo "Test 2: BDT 1080 to USD"
+        echo -e "2\n1080\n0\n" | ./currency_converter | tee test_output.txt
+        if grep -q "10.00" test_output.txt; then
+          echo "✅ Test 2 passed: BDT to USD conversion correct"
+        else
+          echo "❌ Test 2 failed: BDT to USD conversion incorrect"
+          exit 1
+        fi
         
-        echo "Testing BDT to USD conversion..."
-        echo -e "2\n1080\n0\n" | ./currency_converter | grep "10.00" && echo "✓ Test passed" || echo "✗ Test failed"
+        # Test 3: USD to EUR conversion
+        echo ""
+        echo "Test 3: USD 100 to EUR"
+        echo -e "3\n100\n0\n" | ./currency_converter | tee test_output.txt
+        if grep -q "95.00" test_output.txt; then
+          echo "✅ Test 3 passed: USD to EUR conversion correct"
+        else
+          echo "❌ Test 3 failed: USD to EUR conversion incorrect"
+          exit 1
+        fi
         
-        echo "Testing invalid input..."
-        echo -e "99\n0\n" | ./currency_converter | grep "Invalid choice" && echo "✓ Test passed" || echo "✗ Test failed"
+        # Test 4: AUD to BDT conversion
+        echo ""
+        echo "Test 4: AUD 100 to BDT"
+        echo -e "4\n100\n0\n" | ./currency_converter | tee test_output.txt
+        if grep -q "8509.00" test_output.txt; then
+          echo "✅ Test 4 passed: AUD to BDT conversion correct"
+        else
+          echo "❌ Test 4 failed: AUD to BDT conversion incorrect"
+          exit 1
+        fi
         
-        echo "All tests completed!"
+        # Test 5: BDT to AUD conversion
+        echo ""
+        echo "Test 5: BDT 1000 to AUD"
+        echo -e "5\n1000\n0\n" | ./currency_converter | tee test_output.txt
+        if grep -q "12.00" test_output.txt; then
+          echo "✅ Test 5 passed: BDT to AUD conversion correct"
+        else
+          echo "❌ Test 5 failed: BDT to AUD conversion incorrect"
+          exit 1
+        fi
+        
+        # Test 6: Invalid choice handling
+        echo ""
+        echo "Test 6: Invalid choice (99)"
+        echo -e "99\n0\n" | ./currency_converter | tee test_output.txt
+        if grep -q "Invalid choice" test_output.txt; then
+          echo "✅ Test 6 passed: Invalid choice detected"
+        else
+          echo "❌ Test 6 failed: Invalid choice not detected"
+          exit 1
+        fi
+        
+        # Test 7: Negative amount handling (optional - depends on your program)
+        echo ""
+        echo "Test 7: Negative amount test"
+        echo -e "1\n-50\n0\n" | ./currency_converter | tee test_output.txt
+        if grep -q "-5400.00" test_output.txt; then
+          echo "⚠️  Test 7: Program accepts negative amounts (this is expected behavior)"
+        else
+          echo "ℹ️  Test 7: Program may not accept negative amounts"
+        fi
+        
+        echo ""
+        echo "============================="
+        echo "     ALL TESTS PASSED!      "
+        echo "============================="
     
-    - name: Upload executable (optional)
+    - name: Upload test results
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results
+        path: test_output.txt
+    
+    - name: Upload executable
       uses: actions/upload-artifact@v4
       with:
         name: currency_converter
