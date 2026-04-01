@@ -46,4 +46,95 @@ Choose Conversion:
 0. Exit
 Enter your choice: 1
 Enter the amount: 100
-100.00 USD = 10800.00 BDT 
+100.00 USD = 10800.00 BDT
+
+```
+## 🛠️ Technical Details
+## Requirements
+C compiler (GCC recommended)
+
+Standard C libraries
+
+## Compilation
+```bash
+gcc -o currency_converter currency_converter.c
+```
+
+## Run the Program
+```bash
+./currency_converter
+```
+## 📁 File Structure
+```bash
+currency-converter/
+├── currency_converter.c    # Source code file
+└── README.md              # Documentation
+```
+
+## 🔧 Code Structure
+The program follows a simple structure:
+
+Header includes: stdio.h for input/output operations
+
+Variable declarations: Stores user choice, amount, and conversion result
+
+Display header: Shows program title
+
+Main loop: do-while loop that continues until user exits
+
+Menu display: Shows available conversion options
+
+Input handling: Takes user choice and amount
+
+Conversion logic: if-else ladder for different conversion types
+
+Output formatting: Displays results with proper formatting
+
+## 📊 Exchange Rates Used
+Note: The exchange rates in this version are static. For real-time rates, you would need to integrate with an API.
+
+USD to BDT: 108.00
+
+USD to EUR: 0.95
+
+AUD to BDT: 85.09
+
+BDT to AUD: 0.012
+
+## 🎯 Future Enhancements
+Potential improvements for future versions:
+
+Add more currency pairs (EUR to USD, GBP to BDT, etc.)
+
+Integrate with live exchange rate API
+
+Add support for user-defined custom rates
+
+Implement batch conversion from file
+
+Add graphical user interface (GUI)
+
+Save conversion history to file
+
+Add support for cryptocurrency conversions
+
+## 🤝 Contributing
+Feel free to fork this project and submit pull requests for any improvements or bug fixes. Some areas that could use improvement:
+
+Adding error handling for invalid numeric inputs
+
+Implementing dynamic exchange rate updates
+
+Adding support for more currencies
+
+Improving code modularity with functions
+
+## 📝 License
+This project is open source and available under the MIT License.
+
+## 👨‍💻 Author
+[MD. Salah Uddin]
+
+## ⭐ Support
+If you find this project useful, please give it a star on GitHub!
+
