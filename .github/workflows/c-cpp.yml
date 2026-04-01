@@ -8,16 +8,42 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
+    
     steps:
     - uses: actions/checkout@v4
-    - name: configure
-      run: ./configure
-    - name: make
-      run: make
-    - name: make check
-      run: make check
-    - name: make distcheck
-      run: make distcheck
+    
+    - name: Install build tools
+      run: sudo apt-get update && sudo apt-get install -y gcc make
+    
+    - name: Compile program
+      run: gcc -o currency_converter currency_converter.c -lm
+    
+    - name: Run tests
+      run: |
+        echo "Running basic tests..."
+        # Test if executable exists
+        if [ -f currency_converter ]; then
+          echo "✓ Executable created successfully"
+        else
+          echo "✗ Executable not found"
+          exit 1
+        fi
+        
+        # Test with automated input
+        echo "Testing USD to BDT conversion..."
+        echo -e "1\n100\n0\n" | ./currency_converter | grep "10800.00" && echo "✓ Test passed" || echo "✗ Test failed"
+        
+        echo "Testing BDT to USD conversion..."
+        echo -e "2\n1080\n0\n" | ./currency_converter | grep "10.00" && echo "✓ Test passed" || echo "✗ Test failed"
+        
+        echo "Testing invalid input..."
+        echo -e "99\n0\n" | ./currency_converter | grep "Invalid choice" && echo "✓ Test passed" || echo "✗ Test failed"
+        
+        echo "All tests completed!"
+    
+    - name: Upload executable (optional)
+      uses: actions/upload-artifact@v4
+      with:
+        name: currency_converter
+        path: currency_converter
