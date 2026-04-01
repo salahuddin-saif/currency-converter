@@ -1,4 +1,4 @@
-name: C/C++ CI with Detailed Tests
+name: C/C++ CI
 
 on:
   push:
@@ -9,78 +9,123 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    
+
     steps:
     - uses: actions/checkout@v4
+    
+    - name: Install build tools
+      run: sudo apt-get update && sudo apt-get install -y gcc
     
     - name: Compile program
       run: gcc -o currency_converter currency_converter.c
     
-    - name: Test invalid choice
+    - name: Verify compilation
       run: |
-        echo "Testing invalid choice input..."
-        echo "Sending input: 99 (invalid) then 0 (exit)"
-        echo "------------------------"
+        if [ -f currency_converter ]; then
+          echo "✅ Build successful!"
+          ls -lh currency_converter
+        else
+          echo "❌ Build failed!"
+          exit 1
+        fi
+    
+    - name: Run functional tests
+      run: |
+        echo "============================="
+        echo "     RUNNING FUNCTIONAL TESTS"
+        echo "============================="
         
-        # Run program with invalid choice
+        # Test 1: USD to BDT conversion
+        echo ""
+        echo "Test 1: USD 100 to BDT"
+        OUTPUT=$(echo -e "1\n100\n0\n" | ./currency_converter)
+        echo "$OUTPUT"
+        if echo "$OUTPUT" | grep -q "10800.00"; then
+          echo "✅ Test 1 passed"
+        else
+          echo "❌ Test 1 failed"
+          exit 1
+        fi
+        
+        # Test 2: BDT to USD conversion
+        echo ""
+        echo "Test 2: BDT 1080 to USD"
+        OUTPUT=$(echo -e "2\n1080\n0\n" | ./currency_converter)
+        echo "$OUTPUT"
+        if echo "$OUTPUT" | grep -q "10.00"; then
+          echo "✅ Test 2 passed"
+        else
+          echo "❌ Test 2 failed"
+          exit 1
+        fi
+        
+        # Test 3: USD to EUR conversion
+        echo ""
+        echo "Test 3: USD 100 to EUR"
+        OUTPUT=$(echo -e "3\n100\n0\n" | ./currency_converter)
+        echo "$OUTPUT"
+        if echo "$OUTPUT" | grep -q "95.00"; then
+          echo "✅ Test 3 passed"
+        else
+          echo "❌ Test 3 failed"
+          exit 1
+        fi
+        
+        # Test 4: AUD to BDT conversion
+        echo ""
+        echo "Test 4: AUD 100 to BDT"
+        OUTPUT=$(echo -e "4\n100\n0\n" | ./currency_converter)
+        echo "$OUTPUT"
+        if echo "$OUTPUT" | grep -q "8509.00"; then
+          echo "✅ Test 4 passed"
+        else
+          echo "❌ Test 4 failed"
+          exit 1
+        fi
+        
+        # Test 5: BDT to AUD conversion
+        echo ""
+        echo "Test 5: BDT 1000 to AUD"
+        OUTPUT=$(echo -e "5\n1000\n0\n" | ./currency_converter)
+        echo "$OUTPUT"
+        if echo "$OUTPUT" | grep -q "12.00"; then
+          echo "✅ Test 5 passed"
+        else
+          echo "❌ Test 5 failed"
+          exit 1
+        fi
+        
+        # Test 6: Invalid choice handling
+        echo ""
+        echo "Test 6: Invalid choice (99)"
         OUTPUT=$(echo -e "99\n0\n" | ./currency_converter)
         echo "$OUTPUT"
-        
-        echo "------------------------"
-        
-        # Check if output contains "Invalid choice"
         if echo "$OUTPUT" | grep -q "Invalid choice"; then
-          echo "✅ SUCCESS: Program correctly identified invalid choice"
-          echo "   Expected message: 'Invalid choice! Try again.'"
-          echo "   Found in output: Yes"
+          echo "✅ Test 6 passed: Invalid choice detected"
         else
-          echo "❌ FAILURE: Program did not display 'Invalid choice' message"
-          echo "   Expected message: 'Invalid choice! Try again.'"
-          echo "   Found in output: No"
+          echo "❌ Test 6 failed: Invalid choice not detected"
+          exit 1
+        fi
+        
+        # Test 7: Exit functionality
+        echo ""
+        echo "Test 7: Exit with option 0"
+        OUTPUT=$(echo -e "0\n" | ./currency_converter)
+        echo "$OUTPUT"
+        if echo "$OUTPUT" | grep -q "Exiting program"; then
+          echo "✅ Test 7 passed: Exit message displayed"
+        else
+          echo "❌ Test 7 failed: Exit message not displayed"
           exit 1
         fi
         
         echo ""
-        echo "Testing multiple invalid choices..."
-        OUTPUT=$(echo -e "99\n100\n0\n" | ./currency_converter)
-        if echo "$OUTPUT" | grep -q "Invalid choice"; then
-          echo "✅ SUCCESS: Program handled multiple invalid choices"
-        fi
+        echo "============================="
+        echo "     ALL TESTS PASSED!      "
+        echo "============================="
     
-    - name: Test all valid conversions
-      run: |
-        echo "============================="
-        echo "Testing all valid conversions"
-        echo "============================="
-        
-        # Test array of conversions
-        declare -a tests=(
-          "1|100|10800.00|USD to BDT"
-          "2|1080|10.00|BDT to USD"
-          "3|100|95.00|USD to EUR"
-          "4|100|8509.00|AUD to BDT"
-          "5|1000|12.00|BDT to AUD"
-        )
-        
-        for test in "${tests[@]}"; do
-          IFS='|' read -r choice amount expected name <<< "$test"
-          echo ""
-          echo "Testing: $name"
-          echo "Input: choice=$choice, amount=$amount"
-          
-          OUTPUT=$(echo -e "$choice\n$amount\n0\n" | ./currency_converter)
-          
-          if echo "$OUTPUT" | grep -q "$expected"; then
-            echo "✅ PASS: $name - Result contains $expected"
-          else
-            echo "❌ FAIL: $name - Expected '$expected' not found in output"
-            echo "Program output:"
-            echo "$OUTPUT"
-            exit 1
-          fi
-        done
-        
-        echo ""
-        echo "============================="
-        echo "✅ All conversion tests passed!"
-        echo "============================="
+    - name: Upload executable as artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: currency-converter-linux
+        path: currency_converter
