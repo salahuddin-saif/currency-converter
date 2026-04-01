@@ -1,4 +1,4 @@
-name: C/C++ CI
+name: C/C++ CI with Detailed Tests
 
 on:
   push:
@@ -13,108 +13,74 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
-    - name: Install build tools
-      run: sudo apt-get update && sudo apt-get install -y gcc
-    
     - name: Compile program
       run: gcc -o currency_converter currency_converter.c
     
-    - name: Run tests
+    - name: Test invalid choice
+      run: |
+        echo "Testing invalid choice input..."
+        echo "Sending input: 99 (invalid) then 0 (exit)"
+        echo "------------------------"
+        
+        # Run program with invalid choice
+        OUTPUT=$(echo -e "99\n0\n" | ./currency_converter)
+        echo "$OUTPUT"
+        
+        echo "------------------------"
+        
+        # Check if output contains "Invalid choice"
+        if echo "$OUTPUT" | grep -q "Invalid choice"; then
+          echo "✅ SUCCESS: Program correctly identified invalid choice"
+          echo "   Expected message: 'Invalid choice! Try again.'"
+          echo "   Found in output: Yes"
+        else
+          echo "❌ FAILURE: Program did not display 'Invalid choice' message"
+          echo "   Expected message: 'Invalid choice! Try again.'"
+          echo "   Found in output: No"
+          exit 1
+        fi
+        
+        echo ""
+        echo "Testing multiple invalid choices..."
+        OUTPUT=$(echo -e "99\n100\n0\n" | ./currency_converter)
+        if echo "$OUTPUT" | grep -q "Invalid choice"; then
+          echo "✅ SUCCESS: Program handled multiple invalid choices"
+        fi
+    
+    - name: Test all valid conversions
       run: |
         echo "============================="
-        echo "     RUNNING TESTS"
+        echo "Testing all valid conversions"
         echo "============================="
         
-        # Test 1: USD to BDT conversion
-        echo ""
-        echo "Test 1: USD 100 to BDT"
-        echo -e "1\n100\n0\n" | ./currency_converter | tee test_output.txt
-        if grep -q "10800.00" test_output.txt; then
-          echo "✅ Test 1 passed: USD to BDT conversion correct"
-        else
-          echo "❌ Test 1 failed: USD to BDT conversion incorrect"
-          exit 1
-        fi
+        # Test array of conversions
+        declare -a tests=(
+          "1|100|10800.00|USD to BDT"
+          "2|1080|10.00|BDT to USD"
+          "3|100|95.00|USD to EUR"
+          "4|100|8509.00|AUD to BDT"
+          "5|1000|12.00|BDT to AUD"
+        )
         
-        # Test 2: BDT to USD conversion
-        echo ""
-        echo "Test 2: BDT 1080 to USD"
-        echo -e "2\n1080\n0\n" | ./currency_converter | tee test_output.txt
-        if grep -q "10.00" test_output.txt; then
-          echo "✅ Test 2 passed: BDT to USD conversion correct"
-        else
-          echo "❌ Test 2 failed: BDT to USD conversion incorrect"
-          exit 1
-        fi
-        
-        # Test 3: USD to EUR conversion
-        echo ""
-        echo "Test 3: USD 100 to EUR"
-        echo -e "3\n100\n0\n" | ./currency_converter | tee test_output.txt
-        if grep -q "95.00" test_output.txt; then
-          echo "✅ Test 3 passed: USD to EUR conversion correct"
-        else
-          echo "❌ Test 3 failed: USD to EUR conversion incorrect"
-          exit 1
-        fi
-        
-        # Test 4: AUD to BDT conversion
-        echo ""
-        echo "Test 4: AUD 100 to BDT"
-        echo -e "4\n100\n0\n" | ./currency_converter | tee test_output.txt
-        if grep -q "8509.00" test_output.txt; then
-          echo "✅ Test 4 passed: AUD to BDT conversion correct"
-        else
-          echo "❌ Test 4 failed: AUD to BDT conversion incorrect"
-          exit 1
-        fi
-        
-        # Test 5: BDT to AUD conversion
-        echo ""
-        echo "Test 5: BDT 1000 to AUD"
-        echo -e "5\n1000\n0\n" | ./currency_converter | tee test_output.txt
-        if grep -q "12.00" test_output.txt; then
-          echo "✅ Test 5 passed: BDT to AUD conversion correct"
-        else
-          echo "❌ Test 5 failed: BDT to AUD conversion incorrect"
-          exit 1
-        fi
-        
-        # Test 6: Invalid choice handling
-        echo ""
-        echo "Test 6: Invalid choice (99)"
-        echo -e "99\n0\n" | ./currency_converter | tee test_output.txt
-        if grep -q "Invalid choice" test_output.txt; then
-          echo "✅ Test 6 passed: Invalid choice detected"
-        else
-          echo "❌ Test 6 failed: Invalid choice not detected"
-          exit 1
-        fi
-        
-        # Test 7: Negative amount handling (optional - depends on your program)
-        echo ""
-        echo "Test 7: Negative amount test"
-        echo -e "1\n-50\n0\n" | ./currency_converter | tee test_output.txt
-        if grep -q "-5400.00" test_output.txt; then
-          echo "⚠️  Test 7: Program accepts negative amounts (this is expected behavior)"
-        else
-          echo "ℹ️  Test 7: Program may not accept negative amounts"
-        fi
+        for test in "${tests[@]}"; do
+          IFS='|' read -r choice amount expected name <<< "$test"
+          echo ""
+          echo "Testing: $name"
+          echo "Input: choice=$choice, amount=$amount"
+          
+          OUTPUT=$(echo -e "$choice\n$amount\n0\n" | ./currency_converter)
+          
+          if echo "$OUTPUT" | grep -q "$expected"; then
+            echo "✅ PASS: $name - Result contains $expected"
+          else
+            echo "❌ FAIL: $name - Expected '$expected' not found in output"
+            echo "Program output:"
+            echo "$OUTPUT"
+            exit 1
+          fi
+        done
         
         echo ""
         echo "============================="
-        echo "     ALL TESTS PASSED!      "
+        echo "✅ All conversion tests passed!"
         echo "============================="
-    
-    - name: Upload test results
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: test-results
-        path: test_output.txt
-    
-    - name: Upload executable
-      uses: actions/upload-artifact@v4
-      with:
-        name: currency_converter
-        path: currency_converter
