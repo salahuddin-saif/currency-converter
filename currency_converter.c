@@ -1,25 +1,45 @@
-#include <iostream>
-#include <fstream>
-#include <cstring>
-#include <cstdlib>
-#include <limits>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
 
-using namespace std;
-
-string currentUser = "";
-bool isLoggedIn = false;
+char currentUser[100] = "";
+int isLoggedIn = 0;
 int choice;
 
+// Function declarations
+void splashScreen();
+void center(char *text);
+void globalHeader();
+void pageHeader(char *title, char *color);
+void registerUser();
+void userLogin();
+void saveHistory(char *conversion);
+void viewHistory();
+void currencyConverter(char *color);
+void userDashboard();
+void userPanel();
+void adminLogin();
+void developerPanel();
 
-// =====loading page ====
+// ===== UTILITY FUNCTIONS =====
+void clearScreen() {
+    system("cls");
+}
 
+void waitForEnter() {
+    printf("\n\t\t\tPress ENTER to continue...");
+    while(getchar() != '\n');
+    getchar();
+}
+
+// ===== loading page ====
 void splashScreen()
 {
     system("color 0A"); // green text
-    system("cls");
+    clearScreen();
 
-    cout << R"(
-
+    printf(R"(
                      ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
                    +++*#######################################################*++++
                  ++++#############################**############################*+++
@@ -57,7 +77,7 @@ void splashScreen()
     +++++++++++++++++####:.....:--:....*########....=########+....:++-....*####+++++++++++++++++
     +++++++++++++++++++*####+:.......-##########....=#########*.........+###*+++++++++++++++++++
     ++++++++++++++++++++++*#####*++*############....=###########*===+*####*++++++++++++++++++++
-     ++++++++++++++++++++++++*##################....=#################*+++++++++++++++++++++++
+    ++++++++++++++++++++++++*##################....=#################*+++++++++++++++++++++++
       ++++++++++++++++++++++++++++*#############....=#############*++++++++++++++++++++++++++
        ++++++++++++++++++++++++++++++++*########....=#######**++++++++++++++++++++++++++++++
          ++++++++++++++++++++++++++++++++++*############*+++++++++++++++++++++++++++++++++
@@ -74,19 +94,19 @@ void splashScreen()
                                               ++++++++
                                                  ++
 
-)";
-    cout << "\n\n\t\t\tPress ENTER to continue... \n";
-   string dummy;
-    getline(cin, dummy);  // wait for Enter
+)");
+
+    printf("\n\n\t\t\tPress ENTER to continue... \n");
+    getchar();  // Only one getchar() now - waits for single Enter press
 }
 
 // ===== CENTER =====
-void center(string text)
+void center(char *text)
 {
     int width = 80;
-    int pad = (width - text.length()) / 2;
-    for(int i = 0; i < pad; i++) cout << " ";
-    cout << text << endl;
+    int pad = (width - strlen(text)) / 2;
+    for(int i = 0; i < pad; i++) printf(" ");
+    printf("%s\n", text);
 }
 
 // ===== GLOBAL HEADER =====
@@ -98,120 +118,171 @@ void globalHeader()
 }
 
 // ===== PAGE HEADER =====
-void pageHeader(string title, string color)
+void pageHeader(char *title, char *color)
 {
-    system(color.c_str());
-    system("cls");
+    char command[50];
+    sprintf(command, "color %s", color);
+    system(command);
+    clearScreen();
 
-    cout << "\n\n";
+    printf("\n\n");
     globalHeader();
-    cout << "\n";
-    center(">> " + title + " <<");
+    printf("\n");
+    char temp[100];
+    sprintf(temp, ">> %s <<", title);
+    center(temp);
     center("-----------------------------------------------");
-    cout << "\n";
+    printf("\n");
+}
+
+// ===== DEVELOPER PANEL =====
+void developerPanel()
+{
+    int ch;
+    do
+    {
+        pageHeader("Developer Panel", "0E");
+
+        center("===============================================");
+        center("          DEVELOPER INFORMATION");
+        center("===============================================");
+        printf("\n");
+        center("|------------------------------------------------|");
+        center("|Developer: [NAME1]      |   Developer: [NAME2]  |");
+        center("|ID:         [ID1]       |   ID:         [ID2]   |");
+        center("|------------------------------------------------|");
+        center("|Developer: [NAME3]      |   Developer: [NAME4]  |");
+        center("|ID:         [ID3]       |   ID:         [ID4]   |");
+        center("|------------------------------------------------|");
+        printf("\n");
+        center("Version: 1.0");
+        center("Course: Programming and Problem Solving Lab");
+        center("Submitted To: Abdullah Al Mamun");
+        center("           Sr. Lecturer");
+        center("            Department of CSE");
+        center("              Daffodil International University");
+        center("Date: 2026");
+        printf("\n");
+
+        center("===============================================");
+        center("1. Back to Admin Panel");
+        center("0. Exit");
+
+        printf("\n\t\t\t");
+        scanf("%d", &ch);
+
+        if(ch == 1) return;
+        else if(ch == 0) exit(0);
+
+    } while(1);
 }
 
 // ===== REGISTER =====
 void registerUser()
 {
-    pageHeader("User Registration", "color E0");
+    pageHeader("User Registration", "E0");
 
-    string u, p;
+    char u[100], p[100];
 
     center("Enter Username:");
-    cout << "\t\t\t";
-    cin >> u;
+    printf("\t\t\t");
+    scanf("%s", u);
 
     center("Enter Password:");
-    cout << "\t\t\t";
-    cin >> p;
+    printf("\t\t\t");
+    scanf("%s", p);
 
-    ofstream file("users.txt", ios::app);
-    file << u << " " << p << endl;
-    file.close();
+    FILE *file = fopen("users.txt", "a");
+    fprintf(file, "%s %s\n", u, p);
+    fclose(file);
 
     center("Registration Successful!");
-    system("pause");
+    waitForEnter();
 }
 
 // ===== LOGIN =====
 void userLogin()
 {
-    pageHeader("User Login", "color E0");
+    pageHeader("User Login", "E0");
 
-    string u, p, fu, fp;
-    bool found = false;
+    char u[100], p[100], fu[100], fp[100];
+    int found = 0;
 
     center("Enter Username:");
-    cout << "\t\t\t";
-    cin >> u;
+    printf("\t\t\t");
+    scanf("%s", u);
 
     center("Enter Password:");
-    cout << "\t\t\t";
-    cin >> p;
+    printf("\t\t\t");
+    scanf("%s", p);
 
-    ifstream file("users.txt");
+    FILE *file = fopen("users.txt", "r");
 
-    while(file >> fu >> fp)
+    while(fscanf(file, "%s %s", fu, fp) != EOF)
     {
-        if(u == fu && p == fp)
+        if(strcmp(u, fu) == 0 && strcmp(p, fp) == 0)
         {
-            found = true;
-            currentUser = u;
-            isLoggedIn = true;
+            found = 1;
+            strcpy(currentUser, u);
+            isLoggedIn = 1;
             break;
         }
     }
 
-    file.close();
+    fclose(file);
 
     if(found)
         center("Login Successful!");
     else
         center("Invalid Login!");
 
-    system("pause");
+    waitForEnter();
 }
 
 // ===== SAVE HISTORY =====
-void saveHistory(string conversion)
+void saveHistory(char *conversion)
 {
-    ifstream in("history.txt");
-    ofstream temp("temp.txt");
+    FILE *in = fopen("history.txt", "r");
+    FILE *temp = fopen("temp.txt", "w");
 
-    string line;
-    bool found = false;
+    char line[500];
+    int found = 0;
 
-    while(getline(in, line))
-    {
-        if(line.find("User: " + currentUser + " | " + conversion) != string::npos)
+    char searchStr[500];
+    sprintf(searchStr, "User: %s | %s", currentUser, conversion);
+
+    if(in != NULL) {
+        while(fgets(line, sizeof(line), in))
         {
-            found = true;
+            line[strcspn(line, "\n")] = 0; // Remove newline
 
-            int pos = line.find("Total Uses: ");
-            int count = stoi(line.substr(pos + 12));
-            count++;
+            if(strstr(line, searchStr) != NULL)
+            {
+                found = 1;
 
-            temp << "User: " << currentUser
-                 << " | " << conversion
-                 << " | Total Uses: " << count << endl;
+                char *pos = strstr(line, "Total Uses: ");
+                if(pos != NULL)
+                {
+                    int count = atoi(pos + 12);
+                    count++;
+
+                    fprintf(temp, "User: %s | %s | Total Uses: %d\n", currentUser, conversion, count);
+                }
+            }
+            else
+            {
+                fprintf(temp, "%s\n", line);
+            }
         }
-        else
-        {
-            temp << line << endl;
-        }
+        fclose(in);
     }
-
-    in.close();
 
     if(!found)
     {
-        temp << "User: " << currentUser
-             << " | " << conversion
-             << " | Total Uses: 1" << endl;
+        fprintf(temp, "User: %s | %s | Total Uses: 1\n", currentUser, conversion);
     }
 
-    temp.close();
+    fclose(temp);
 
     remove("history.txt");
     rename("temp.txt", "history.txt");
@@ -220,95 +291,98 @@ void saveHistory(string conversion)
 // ===== VIEW HISTORY =====
 void viewHistory()
 {
-    pageHeader("Admin History Panel", "color 1F");
+    pageHeader("Admin History Panel", "1F");
 
-    ifstream file("history.txt");
-    string line;
+    FILE *file = fopen("history.txt", "r");
+    char line[500];
 
-    while(getline(file, line))
-    {
-        center(line);
+    if(file == NULL) {
+        center("No history available yet!");
+    } else {
+        while(fgets(line, sizeof(line), file))
+        {
+            line[strcspn(line, "\n")] = 0; // Remove newline
+            center(line);
+        }
+        fclose(file);
     }
 
-    file.close();
-    system("pause");
+    waitForEnter();
 }
 
 // ===== CONVERTER =====
-void currencyConverter(string color)
+void currencyConverter(char *color)
 {
     int from, to;
     double amount, result;
-    string cur[] = {"", "USD", "BDT", "EUR","AUD","SGD","BND"};
+    char *cur[] = {"", "USD", "BDT", "EUR", "AUD", "SGD", "BND"};
 
-    while(true)
+    while(1)
     {
         pageHeader("Currency Converter", color);
 
         center("1. USD    2. BDT    3. EUR  4. AUD  5. SGD  6. BND   0. Back");
         center("Select FROM:");
-        cout << "\t\t\t";
-        cin >> from;
+        printf("\t\t\t");
+        scanf("%d", &from);
 
         if(from == 0) return;
 
         center("Select TO:");
-        cout << "\t\t\t";
-        cin >> to;
+        printf("\t\t\t");
+        scanf("%d", &to);
 
         center("Enter Amount:");
-        cout << "\t\t\t";
-        cin >> amount;
+        printf("\t\t\t");
+        scanf("%lf", &amount);
 
-      if(from==1 && to==2) result = amount * 122.43;      // USD -> BDT
-else if(from==2 && to==1) result = amount / 122.43; // BDT -> USD
-else if(from==1 && to==3) result = amount * 0.87;   // USD -> EUR
-else if(from==3 && to==1) result = amount / 0.87;   // EUR -> USD
-else if(from==2 && to==3) result = amount / 0.0071; // BDT -> EUR
-else if(from==3 && to==2) result = amount * 0.0071; // EUR -> BDT
-else if(from==1 && to==4) result = amount * 1.45;   // USD -> AUD
-else if(from==4 && to==1) result = amount / 1.45;   // AUD -> USD
-else if(from==1 && to==5) result = amount * 1.29;   // USD -> SGD
-else if(from==5 && to==1) result = amount / 1.29;   // SGD -> USD
-else if(from==1 && to==6) result = amount * 1.29;   // USD -> BND
-else if(from==6 && to==1) result = amount / 1.29;   // BND -> USD
-
-else if(from==2 && to==4) result = amount / 84.25;  // BDT -> AUD
-else if(from==4 && to==2) result = amount * 84.25;  // AUD -> BDT
-else if(from==2 && to==5) result = amount / 95.26;  // BDT -> SGD
-else if(from==5 && to==2) result = amount * 95.26;  // SGD -> BDT
-else if(from==2 && to==6) result = amount / 95.29;  // BDT -> BND
-else if(from==6 && to==2) result = amount * 95.29;  // BND -> BDT
-
-else if(from==3 && to==4) result = amount * 1.67;   // EUR -> AUD
-else if(from==4 && to==3) result = amount / 1.67;   // AUD -> EUR
-else if(from==3 && to==5) result = amount * 1.48;   // EUR -> SGD
-else if(from==5 && to==3) result = amount / 1.48;   // SGD -> EUR
-else if(from==3 && to==6) result = amount * 1.48;   // EUR -> BND
-else if(from==6 && to==3) result = amount / 1.48;   // BND -> EUR
-
-else if(from==4 && to==5) result = amount * 0.89;   // AUD -> SGD
-else if(from==5 && to==4) result = amount / 0.89;   // SGD -> AUD
-else if(from==4 && to==6) result = amount * 0.88;   // AUD -> BND
-else if(from==6 && to==4) result = amount / 0.88;   // BND -> AUD
-
-else if(from==5 && to==6) result = amount * 1.0;    // SGD -> BND (1:1)
-else if(from==6 && to==5) result = amount / 1.0;    // BND -> SGD (1:1)
-
+        if(from==1 && to==2) result = amount * 122.43;      // USD -> BDT
+        else if(from==2 && to==1) result = amount / 122.43; // BDT -> USD
+        else if(from==1 && to==3) result = amount * 0.87;   // USD -> EUR
+        else if(from==3 && to==1) result = amount / 0.87;   // EUR -> USD
+        else if(from==2 && to==3) result = amount / 0.0071; // BDT -> EUR
+        else if(from==3 && to==2) result = amount * 0.0071; // EUR -> BDT
+        else if(from==1 && to==4) result = amount * 1.45;   // USD -> AUD
+        else if(from==4 && to==1) result = amount / 1.45;   // AUD -> USD
+        else if(from==1 && to==5) result = amount * 1.29;   // USD -> SGD
+        else if(from==5 && to==1) result = amount / 1.29;   // SGD -> USD
+        else if(from==1 && to==6) result = amount * 1.29;   // USD -> BND
+        else if(from==6 && to==1) result = amount / 1.29;   // BND -> USD
+        else if(from==2 && to==4) result = amount / 84.25;  // BDT -> AUD
+        else if(from==4 && to==2) result = amount * 84.25;  // AUD -> BDT
+        else if(from==2 && to==5) result = amount / 95.26;  // BDT -> SGD
+        else if(from==5 && to==2) result = amount * 95.26;  // SGD -> BDT
+        else if(from==2 && to==6) result = amount / 95.29;  // BDT -> BND
+        else if(from==6 && to==2) result = amount * 95.29;  // BND -> BDT
+        else if(from==3 && to==4) result = amount * 1.67;   // EUR -> AUD
+        else if(from==4 && to==3) result = amount / 1.67;   // AUD -> EUR
+        else if(from==3 && to==5) result = amount * 1.48;   // EUR -> SGD
+        else if(from==5 && to==3) result = amount / 1.48;   // SGD -> EUR
+        else if(from==3 && to==6) result = amount * 1.48;   // EUR -> BND
+        else if(from==6 && to==3) result = amount / 1.48;   // BND -> EUR
+        else if(from==4 && to==5) result = amount * 0.89;   // AUD -> SGD
+        else if(from==5 && to==4) result = amount / 0.89;   // SGD -> AUD
+        else if(from==4 && to==6) result = amount * 0.88;   // AUD -> BND
+        else if(from==6 && to==4) result = amount / 0.88;   // BND -> AUD
+        else if(from==5 && to==6) result = amount * 1.0;    // SGD -> BND (1:1)
+        else if(from==6 && to==5) result = amount / 1.0;    // BND -> SGD (1:1)
         else if(from == to) result = amount;
         else
         {
             center("Invalid Conversion!");
-            system("pause");
+            waitForEnter();
             continue;
         }
 
-        center("Result: " + to_string(result));
+        char resultMsg[200];
+        sprintf(resultMsg, "Result: %.2lf", result);
+        center(resultMsg);
 
-        string conversion = cur[from] + string(" to ") + cur[to];
+        char conversion[50];
+        sprintf(conversion, "%s to %s", cur[from], cur[to]);
         saveHistory(conversion);
 
-        system("pause");
+        waitForEnter();
     }
 }
 
@@ -319,28 +393,28 @@ void userDashboard()
 
     do
     {
-        pageHeader("User Dashboard", "color E0");
+        pageHeader("User Dashboard", "E0");
 
         center("1. Currency Converter");
         center("2. Logout");
 
-        cout << "\t\t\t";
-        cin >> ch;
+        printf("\t\t\t");
+        scanf("%d", &ch);
 
         switch(ch)
         {
         case 1:
-            currencyConverter("color E0");
+            currencyConverter("E0");
             break;
         case 2:
-            isLoggedIn = false;
-            currentUser = "";
+            isLoggedIn = 0;
+            strcpy(currentUser, "");
             center("Logged out successfully!");
-            system("pause");
+            waitForEnter();
             return;
         }
 
-    } while(true);
+    } while(1);
 }
 
 // ===== USER PANEL =====
@@ -348,18 +422,18 @@ void userPanel()
 {
     int ch;
 
-    while(true)
+    while(1)
     {
         if(!isLoggedIn)
         {
-            pageHeader("User Panel", "color E0");
+            pageHeader("User Panel", "E0");
 
             center("1. Register");
             center("2. Login");
             center("0. Back");
 
-            cout << "\t\t\t";
-            cin >> ch;
+            printf("\t\t\t");
+            scanf("%d", &ch);
 
             if(ch == 1) registerUser();
             else if(ch == 2)
@@ -376,42 +450,44 @@ void userPanel()
 // ===== ADMIN LOGIN =====
 void adminLogin()
 {
-    pageHeader("Admin Login", "color 1F");
+    pageHeader("Admin Login", "1F");
 
     char u[20], p[20];
 
     center("Username:");
-    cout << "\t\t\t";
-    cin >> u;
+    printf("\t\t\t");
+    scanf("%s", u);
 
     center("Password:");
-    cout << "\t\t\t";
-    cin >> p;
+    printf("\t\t\t");
+    scanf("%s", p);
 
     if(strcmp(u, "admin") == 0 && strcmp(p, "admin") == 0)
     {
         int ch;
         do
         {
-            pageHeader("Admin Panel", "color 1F");
+            pageHeader("Admin Panel", "1F");
 
             center("1. Converter");
             center("2. View History");
+            center("3. Developer Options");
             center("0. Exit");
 
-            cout << "\t\t\t";
-            cin >> ch;
+            printf("\t\t\t");
+            scanf("%d", &ch);
 
-            if(ch == 1) currencyConverter("color 1F");
+            if(ch == 1) currencyConverter("1F");
             else if(ch == 2) viewHistory();
+            else if(ch == 3) developerPanel();
             else if(ch == 0) exit(0);
 
-        } while(true);
+        } while(1);
     }
     else
     {
         center("Wrong Login!");
-        system("pause");
+        waitForEnter();
     }
 }
 
@@ -420,19 +496,21 @@ int main()
 {
     splashScreen();
 
-    while(true)
+    while(1)
     {
-        pageHeader("Main Menu", "color 07");
+        pageHeader("Main Menu", "07");
 
         center("1. Admin");
         center("2. User");
         center("0. Exit");
 
-        cout << "\t\t\t";
-        cin >> choice;
+        printf("\t\t\t");
+        scanf("%d", &choice);
 
         if(choice == 1) adminLogin();
         else if(choice == 2) userPanel();
         else if(choice == 0) exit(0);
     }
+
+    return 0;
 }
