@@ -154,6 +154,9 @@ void developerPanel()
         center("|Developer: [NAME3]      |   Developer: [NAME4]  |");
         center("|ID:         [ID3]       |   ID:         [ID4]   |");
         center("|------------------------------------------------|");
+        center("|Developer: [NAME5]      |                       |");
+        center("|ID:         [ID5]       |                       |");
+        center("|------------------------------------------------|");
         printf("\n");
         center("Version: 1.0");
         center("Course: Programming and Problem Solving Lab");
